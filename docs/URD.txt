@@ -1,0 +1,31 @@
+* tham khảo 1 trang web: https://dieudinhduong.com/
+tài khoản login: 
+Tài khoản: trannhung1508@gmail.com
+Mật khẩu: 123456
+
+* yêu cầu: tạo 1 trang web landing page giới thiệu về 1 chuyên gia dinh dưỡng + khoá học chia sẻ kiến thức về dinh dưỡng, sức khoẻ, lên thực đơn ăn uống
+
+1.chức năng: 
+- login/logout
+- quản lý tài khoản (admin + tài khoản người dùng)
+	+ admin có quyền tạo tài khoản cho user, đăng tải (video bài giảng) theo khoá học
+	+ user: chỉ có quyền xem video của khoá học
+- Xem video khoá học:
+	+ user vào khoá học sẽ hiển thị ra video/ link youtube
+	+ có thể xem trực tiếp trên web/ youtube
+- tính năng: 
+	+ chống nhiều thiết bị đăng nhập vào tài khoản (giới hạn ở 2 thiết bị)
+	+ chống download video của khoá học
+	+ 1 video/link youtube sẽ giới hạn số lần click (10 lần)
+
+2.giao diện: 1 page chứa:
+- header là ảnh chính giới thiệu: ảnh chuyên gia dinh dưỡng + tên thương hiệu + nút đăng nhập
+- body chứa:
+	+ thông tin các khoá học
+	+ nút thêm giỏ hàng -> click vào -> hiện là bạn cần mua tài khoản để tham gia học
+	+ ảnh giới thiệu về giảng viên, người đã học,..
+	+ form đăng ký
+- footer: chứa thông tin liên hệ 
+
+3.tài nguyên: ảnh + video khoá học:
+https://drive.google.com/drive/folders/1yqo23c2UFwFrTqwKg9i4dGusQEnQCpY9?usp=drive_link
