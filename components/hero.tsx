@@ -1,8 +1,10 @@
 import Link from "next/link";
-import {ArrowRight, Play} from "lucide-react";
-import {heroHighlights} from "@/data/content";
-import {Button} from "@/components/ui/button";
-import {Badge} from "@/components/ui/badge";
+import { ArrowRight, Play, User, BookOpen } from "lucide-react";
+import { heroHighlights } from "@/data/content";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import Image from "next/image";
 
 export function HeroSection() {
   return (
@@ -18,14 +20,25 @@ export function HeroSection() {
         <div className="flex flex-col gap-3 sm:flex-row">
           <Button asChild size="lg">
             <Link href="/courses">
-              Đăng ký khoá học <ArrowRight className="h-4 w-4" />
+              <BookOpen className="mr-2 h-4 w-4" />
+              Đăng ký khoá học <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
           <Button asChild variant="secondary" size="lg">
             <Link href="/knowledge">
-              <Play className="h-4 w-4" /> Xem kiến thức miễn phí
+              <Play className="mr-2 h-4 w-4" /> Xem kiến thức miễn phí
             </Link>
           </Button>
+        </div>
+        <div className="flex flex-wrap items-center gap-4 pt-4">
+          <div className="flex items-center gap-2">
+            <User className="h-5 w-5 text-primary" />
+            <span className="text-sm font-medium">Chuyên gia dinh dưỡng</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <BookOpen className="h-5 w-5 text-primary" />
+            <span className="text-sm font-medium">Khoá học cá nhân hoá</span>
+          </div>
         </div>
         <dl className="grid gap-6 sm:grid-cols-3">
           {heroHighlights.map(item => (

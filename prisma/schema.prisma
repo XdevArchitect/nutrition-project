@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -39,6 +39,9 @@ model Video {
   sortOrder   Int      @default(0)
   isPublished Boolean  @default(false)
   createdAt   DateTime @default(now())
+  // Track view limits
+  maxViews    Int      @default(10) // Maximum views allowed
+  views       VideoView[]
 }
 
 model User {
@@ -50,6 +53,8 @@ model User {
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
   enrollments CourseEnrollment[]
+  sessions    UserSession[]      // Track active sessions
+  videoViews  VideoView[]        // Track video views
 }
 
 model CourseEnrollment {
@@ -59,8 +64,38 @@ model CourseEnrollment {
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  videoViews VideoView[] // Track video views for this enrollment
 
   @@unique([userId, courseId])
+}
+
+// Model to track user sessions (for device limitation)
+model UserSession {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceId  String   // Unique identifier for device
+  userAgent String?  // Browser/device info
+  ipAddress String?  // IP address
+  createdAt DateTime @default(now())
+  expiresAt DateTime // When session expires
+  isActive  Boolean  @default(true)
+}
+
+// Model to track video views (for view count limitation)
+model VideoView {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  videoId      String
+  video        Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  enrollmentId String?
+  enrollment   CourseEnrollment? @relation(fields: [enrollmentId], references: [id], onDelete: SetNull)
+  viewCount    Int      @default(0) // Number of times viewed
+  lastViewedAt DateTime @updatedAt
+  createdAt    DateTime @default(now())
+
+  @@unique([userId, videoId])
 }
 
 enum CourseStatus {

@@ -1,0 +1,41 @@
+Tôi thấy đang có lỗi 
+PC@DESKTOP-VLF8T80 MINGW64 /d/03_Projects/03_Freelance_Project/Dự án chị Nhung/nutrition-site
+$ npm run dev
+
+> nutrition-site@0.1.0 dev
+> next dev
+
+  ▲ Next.js 14.2.33
+  - Local:        http://localhost:3000
+  - Environments: .env.local, .env
+
+ ✓ Starting...
+ ✓ Ready in 1936ms
+ ○ Compiling / ...
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+ ⨯ ./components/navigation.tsx:17:1
+Module not found: Can't resolve '@/components/ui/dropdown-menu'
+  15 | } from "@/components/ui/navigation-menu";
+  16 | import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+> 17 | import {
+     | ^
+  18 |   DropdownMenu,
+  19 |   DropdownMenuContent,
+  20 |   DropdownMenuItem,
+
+https://nextjs.org/docs/messages/module-not-found
+ ⨯ ./components/navigation.tsx:17:1
+Module not found: Can't resolve '@/components/ui/dropdown-menu'
+  15 | } from "@/components/ui/navigation-menu";
+  16 | import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+> 17 | import {
+     | ^
+  18 |   DropdownMenu,
+  19 |   DropdownMenuContent,
+  20 |   DropdownMenuItem,
+
+https://nextjs.org/docs/messages/module-not-found
+ GET /_next/static/webpack/562edfd934895e17.webpack.hot-update.json 500 in 11609ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET / 500 in 43ms
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename 'D:\03_Projects\03_Freelance_Project\Dự án chị Nhung\nutrition-site\.next\cache\webpack\client-development-fallback\0.pack.gz_' -> 'D:\03_Projects\03_Freelance_Project\Dự án chị Nhung\nutrition-site\.next\cache\webpack\client-development-fallback\0.pack.gz'

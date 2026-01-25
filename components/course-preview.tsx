@@ -1,11 +1,25 @@
 import Link from "next/link";
-import {ArrowRight, CheckCircle2} from "lucide-react";
-import {courseInfo} from "@/data/content";
-import {Badge} from "@/components/ui/badge";
-import {Button} from "@/components/ui/button";
-import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
+import { ArrowRight, CheckCircle2, ShoppingCart } from "lucide-react";
+import { courseInfo } from "@/data/content";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useSession } from "next-auth/react";
 
 export function CoursePreview() {
+  const { data: session } = useSession();
+
+  const handleAddToCart = () => {
+    if (!session) {
+      // Redirect to login if not authenticated
+      window.location.href = "/login";
+      return;
+    }
+    
+    // In a real implementation, this would add the course to the cart
+    alert("Khóa học đã được thêm vào giỏ hàng! Bạn sẽ được chuyển đến trang thanh toán.");
+  };
+
   return (
     <section className="container py-16">
       <div className="mx-auto max-w-3xl text-center">
@@ -53,8 +67,13 @@ export function CoursePreview() {
                     <CheckCircle2 className="h-4 w-4 text-primary" /> {item}
                   </p>
                 ))}
-                <Button asChild className="mt-4 w-full" variant={plan.highlight ? "default" : "secondary"}>
-                  <Link href="/contact">Đăng ký tư vấn</Link>
+                <Button 
+                  onClick={handleAddToCart} 
+                  className="mt-4 w-full" 
+                  variant={plan.highlight ? "default" : "secondary"}
+                >
+                  <ShoppingCart className="mr-2 h-4 w-4" />
+                  Thêm vào giỏ hàng
                 </Button>
               </CardContent>
             </Card>

@@ -1,56 +1,45 @@
-import {NextResponse} from "next/server";
-import {createHash} from "crypto";
+import { cookies } from "next/headers";
+import { createHash } from "crypto";
+import { NextResponse } from "next/server";
 
 const COOKIE_NAME = "admin-session";
 
-const hashedSecret = () => {
+const expectedHash = () => {
   const secret = process.env.ADMIN_SECRET;
-  if (!secret) {
-    throw new Error("Missing ADMIN_SECRET env");
-  }
+  if (!secret) return null;
   return createHash("sha256").update(secret).digest("hex");
 };
 
 export async function POST(request: Request) {
-  try {
-    const {token} = (await request.json()) as {token?: string};
-    if (!token) {
-      return NextResponse.json({error: "Thiếu mã"}, {status: 400});
-    }
-    if (!process.env.ADMIN_SECRET) {
-      return NextResponse.json({error: "ADMIN_SECRET chưa được cấu hình"}, {status: 500});
-    }
-    if (token !== process.env.ADMIN_SECRET) {
-      return NextResponse.json({error: "Sai mã truy cập"}, {status: 401});
-    }
-    const value = hashedSecret();
-    const response = NextResponse.json({success: true});
-    response.cookies.set({
-      name: COOKIE_NAME,
-      value,
-      httpOnly: true,
-      sameSite: "strict",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      maxAge: 60 * 60 * 8
-    });
-    return response;
-  } catch (error) {
-    console.error("Admin session POST", error);
-    return NextResponse.json({error: "Không thể tạo phiên"}, {status: 500});
+  const expected = expectedHash();
+  if (!expected) {
+    return NextResponse.json({ error: "Chưa cấu hình ADMIN_SECRET" }, { status: 500 });
   }
-}
 
-export async function DELETE() {
-  const response = NextResponse.json({success: true});
-  response.cookies.set({
-    name: COOKIE_NAME,
-    value: "",
-    httpOnly: true,
-    sameSite: "strict",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 0
-  });
-  return response;
+  try {
+    const body = await request.json();
+    const { token } = body;
+
+    if (!token) {
+      return NextResponse.json({ error: "Thiếu mã bí mật" }, { status: 400 });
+    }
+
+    const actual = createHash("sha256").update(token).digest("hex");
+    if (actual !== expected) {
+      return NextResponse.json({ error: "Mã bí mật không đúng" }, { status: 401 });
+    }
+
+    // Đặt cookie với thời gian hết hạn 1 ngày
+    const cookieStore = cookies();
+    cookieStore.set(COOKIE_NAME, actual, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 24,
+      path: "/",
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return NextResponse.json({ error: "Có lỗi xảy ra" }, { status: 500 });
+  }
 }

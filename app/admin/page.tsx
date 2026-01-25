@@ -1,12 +1,12 @@
-import {cookies} from "next/headers";
-import {createHash} from "crypto";
-import type {Metadata} from "next";
-import {prisma} from "@/lib/prisma";
-import {AdminLoginForm} from "@/components/admin-login-form";
-import {AdminToolbar} from "@/components/admin-toolbar";
-import {AdminCourseManager} from "@/components/admin-course-manager";
-import {AdminUserManager} from "@/components/admin-user-manager";
-import {Card, CardContent} from "@/components/ui/card";
+import { cookies } from "next/headers";
+import { createHash } from "crypto";
+import type { Metadata } from "next";
+import { prisma } from "@/lib/prisma";
+import { AdminLoginForm } from "@/components/admin-login-form";
+import { AdminToolbar } from "@/components/admin-toolbar";
+import { AdminCourseManager } from "@/components/admin-course-manager";
+import { AdminUserManager } from "@/components/admin-user-manager";
+import { Card, CardContent } from "@/components/ui/card";
 
 export const metadata: Metadata = {
   title: "Admin",
@@ -37,6 +37,7 @@ export default async function AdminPage() {
   }
 
   if (session !== expected) {
+    // Hiển thị form đăng nhập nếu chưa đăng nhập
     return (
       <div className="container max-w-md space-y-8 py-20">
         <div className="space-y-3 text-center">
@@ -52,7 +53,7 @@ export default async function AdminPage() {
     );
   }
 
-  const leads = await prisma.lead.findMany({orderBy: {createdAt: "desc"}});
+  const leads = await prisma.lead.findMany({ orderBy: { createdAt: "desc" } });
 
   return (
     <div className="container space-y-12 py-16">
