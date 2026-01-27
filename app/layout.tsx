@@ -17,14 +17,16 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://example.com")
 };
 
-export default function RootLayout({children}: {children: React.ReactNode}) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="vi" className={`${heading.variable} ${body.variable}`}>
       <body className="bg-white text-neutral-900 antialiased">
         <AuthProvider>
-          <Navigation />
-          <main>{children}</main>
-          <Footer />
+          {children}
         </AuthProvider>
       </body>
     </html>

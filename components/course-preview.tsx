@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, ShoppingCart } from "lucide-react";
 import { courseInfo } from "@/data/content";
@@ -5,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSession } from "next-auth/react";
+import { toast } from "sonner";
 
 export function CoursePreview() {
   const { data: session } = useSession();
@@ -17,7 +20,7 @@ export function CoursePreview() {
     }
     
     // In a real implementation, this would add the course to the cart
-    alert("Khóa học đã được thêm vào giỏ hàng! Bạn sẽ được chuyển đến trang thanh toán.");
+    toast.success("Khóa học đã được thêm vào giỏ hàng! Bạn sẽ được chuyển đến trang thanh toán.");
   };
 
   return (

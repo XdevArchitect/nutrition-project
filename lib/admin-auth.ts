@@ -1,25 +1,17 @@
-import {cookies} from "next/headers";
-import {NextResponse} from "next/server";
-import {createHash} from "crypto";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { NextResponse } from "next/server";
 
-const COOKIE_NAME = "admin-session";
-
-const expectedHash = () => {
-  const secret = process.env.ADMIN_SECRET;
-  if (!secret) {
-    return null;
+export const assertAdmin = async () => {
+  const session = await getServerSession(authOptions);
+  
+  if (!session) {
+    return NextResponse.json({error: "Không được phép - Vui lòng đăng nhập với tư cách quản trị viên"}, {status: 401});
   }
-  return createHash("sha256").update(secret).digest("hex");
-};
-
-export const assertAdmin = () => {
-  const expected = expectedHash();
-  if (!expected) {
-    return NextResponse.json({error: "ADMIN_SECRET chưa được cấu hình"}, {status: 500});
+  
+  if (session.user?.role !== "ADMIN") {
+    return NextResponse.json({error: "Không được phép - Chỉ quản trị viên mới có thể thực hiện hành động này"}, {status: 403});
   }
-  const session = cookies().get(COOKIE_NAME)?.value;
-  if (session !== expected) {
-    return NextResponse.json({error: "Không được phép"}, {status: 401});
-  }
+  
   return null;
 };

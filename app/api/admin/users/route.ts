@@ -2,9 +2,10 @@ import {Prisma, UserRole} from "@prisma/client";
 import {NextResponse} from "next/server";
 import {prisma} from "@/lib/prisma";
 import {assertAdmin} from "@/lib/admin-auth";
+import bcrypt from "bcryptjs";
 
 export async function GET() {
-  const unauthorized = assertAdmin();
+  const unauthorized = await assertAdmin();
   if (unauthorized) return unauthorized;
 
   const users = await prisma.user.findMany({
@@ -18,30 +19,45 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const unauthorized = assertAdmin();
+  const unauthorized = await assertAdmin();
   if (unauthorized) return unauthorized;
 
   try {
     const payload = (await request.json()) as Partial<{
       name: string;
-      email: string;
-      phone: string;
+      email: string | null;
+      username: string;
+      password: string;
+      phone: string | null;
       role: string;
     }>;
 
-    if (!payload.name || !payload.email) {
-      return NextResponse.json({error: "Thiếu tên hoặc email"}, {status: 400});
+    // Validate required fields
+    if (!payload.name || !payload.username || !payload.password) {
+      return NextResponse.json({error: "Thiếu thông tin bắt buộc"}, {status: 400});
     }
+
+    // Hash password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(payload.password, saltRounds);
 
     const role = payload.role && Object.values(UserRole).includes(payload.role as UserRole)
       ? (payload.role as UserRole)
       : UserRole.STUDENT;
 
+    // Xử lý email để đảm bảo null được chấp nhận
+    let emailValue = null;
+    if (payload.email && payload.email.trim() !== '') {
+      emailValue = payload.email.trim();
+    }
+
     const user = await prisma.user.create({
       data: {
         name: payload.name.trim(),
-        email: payload.email.trim().toLowerCase(),
-        phone: payload.phone?.trim(),
+        email: emailValue,
+        username: payload.username.trim(),
+        password: hashedPassword,
+        phone: payload.phone?.trim() || null,
         role
       },
       include: {
@@ -51,8 +67,10 @@ export async function POST(request: Request) {
 
     return NextResponse.json({user}, {status: 201});
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-      return NextResponse.json({error: "Email đã tồn tại"}, {status: 409});
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2002") {
+        return NextResponse.json({error: "Email hoặc tên đăng nhập đã tồn tại"}, {status: 409});
+      }
     }
     console.error("Create user error", error);
     return NextResponse.json({error: "Không thể tạo người dùng"}, {status: 500});

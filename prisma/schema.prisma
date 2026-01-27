@@ -47,8 +47,10 @@ model Video {
 model User {
   id          String             @id @default(cuid())
   name        String
-  email       String             @unique
+  email       String?            @unique
+  username    String?            @unique
   phone       String?
+  password    String
   role        UserRole           @default(STUDENT)
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt

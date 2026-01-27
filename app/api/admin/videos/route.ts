@@ -3,19 +3,24 @@ import {prisma} from "@/lib/prisma";
 import {assertAdmin} from "@/lib/admin-auth";
 
 export async function GET() {
-  const unauthorized = assertAdmin();
+  const unauthorized = await assertAdmin();
   if (unauthorized) return unauthorized;
 
-  const videos = await prisma.video.findMany({
-    orderBy: [{courseId: "asc"}, {sortOrder: "asc"}],
-    include: {course: {select: {id: true, title: true}}}
-  });
+  try {
+    const videos = await prisma.video.findMany({
+      orderBy: [{courseId: "asc"}, {sortOrder: "asc"}],
+      include: {course: {select: {id: true, title: true}}}
+    });
 
-  return NextResponse.json({videos});
+    return NextResponse.json({videos});
+  } catch (error) {
+    console.error("Error fetching videos:", error);
+    return NextResponse.json({error: "Không thể tải danh sách video"}, {status: 500});
+  }
 }
 
 export async function POST(request: Request) {
-  const unauthorized = assertAdmin();
+  const unauthorized = await assertAdmin();
   if (unauthorized) return unauthorized;
 
   try {
