@@ -6,6 +6,7 @@ import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {Textarea} from "@/components/ui/textarea";
 import {Badge} from "@/components/ui/badge";
+import {AdminVideoUpload} from "@/components/admin-video-upload"; // Import component upload mới
 
 type CourseStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
 
@@ -61,11 +62,16 @@ type VideoDraft = {
 
 type VideoFormDraft = {
   title: string;
-  url: string;
+  // url: string, // Remove URL field
   description: string;
   duration: string;
   sortOrder: string;
 };
+
+// Helper component for required field indicator
+const RequiredIndicator = () => (
+  <span className="text-red-500">*</span>
+);
 
 export function AdminCourseManager() {
   const [courses, setCourses] = useState<CourseSummary[]>([]);
@@ -83,6 +89,9 @@ export function AdminCourseManager() {
   const [courseDrafts, setCourseDrafts] = useState<Record<string, CourseDraft>>({});
   const [videoDrafts, setVideoDrafts] = useState<Record<string, VideoDraft>>({});
   const [newVideoForms, setNewVideoForms] = useState<Record<string, VideoFormDraft>>({});
+  
+  // State để quản lý hiển thị form upload video
+  const [showUploadForm, setShowUploadForm] = useState<Record<string, boolean>>({});
 
   const fetchCourses = useCallback(async () => {
     setLoading(true);
@@ -132,7 +141,7 @@ export function AdminCourseManager() {
       const next: Record<string, VideoFormDraft> = {...current};
       courses.forEach(course => {
         if (!next[course.id]) {
-          next[course.id] = {title: "", url: "", description: "", duration: "", sortOrder: String(course.videos.length + 1)};
+          next[course.id] = {title: "", description: "", duration: "", sortOrder: String(course.videos.length + 1)};
         }
       });
       return next;
@@ -141,7 +150,7 @@ export function AdminCourseManager() {
 
   const courseCount = useMemo(() => courses.length, [courses]);
 
-  const handleCreateCourse = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleCreateCourse = async (event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setCreating(true);
     setError(null);
@@ -164,7 +173,7 @@ export function AdminCourseManager() {
     }
   };
 
-  const handleUpdateCourse = async (courseId: string) => {
+  const handleUpdateCourse = async (courseId: string) {
     const draft = courseDrafts[courseId];
     if (!draft) return;
     setSavingId(courseId);
@@ -187,7 +196,7 @@ export function AdminCourseManager() {
     }
   };
 
-  const handleDeleteCourse = async (courseId: string) => {
+  const handleDeleteCourse = async (courseId: string) {
     if (!window.confirm("Bạn chắc chắn muốn xoá khoá học này?")) return;
     setSavingId(courseId);
     setError(null);
@@ -215,7 +224,7 @@ export function AdminCourseManager() {
     }));
   };
 
-  const handleSaveVideo = async (videoId: string) => {
+  const handleSaveVideo = async (videoId: string) {
     const draft = videoDrafts[videoId];
     if (!draft) return;
     setSavingId(videoId);
@@ -246,7 +255,7 @@ export function AdminCourseManager() {
     }
   };
 
-  const handleDeleteVideo = async (videoId: string) => {
+  const handleDeleteVideo = async (videoId: string) {
     if (!window.confirm("Bạn chắc chắn muốn xoá video này?")) return;
     setSavingId(videoId);
     setError(null);
@@ -274,42 +283,20 @@ export function AdminCourseManager() {
     }));
   };
 
-  const handleCreateVideo = async (courseId: string) => {
-    const form = newVideoForms[courseId];
-    if (!form || !form.title || !form.url) {
-      setError("Cần nhập tiêu đề và đường dẫn video");
-      return;
-    }
-    setSavingId(`create-${courseId}`);
-    setError(null);
-    try {
-      const payload = {
-        courseId,
-        title: form.title,
-        url: form.url,
-        description: form.description,
-        duration: form.duration ? Number(form.duration) : undefined,
-        sortOrder: form.sortOrder ? Number(form.sortOrder) : undefined
-      };
-      const response = await fetch("/api/admin/videos", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(payload)
-      });
-      if (!response.ok) {
-        const payloadResponse = await response.json().catch(() => ({}));
-        throw new Error((payloadResponse as {error?: string}).error ?? "Không thể tạo video");
-      }
-      setNewVideoForms(current => ({
-        ...current,
-        [courseId]: {title: "", url: "", description: "", duration: "", sortOrder: String((Number(form.sortOrder) || 0) + 1)}
-      }));
-      await fetchCourses();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Không thể tạo video");
-    } finally {
-      setSavingId(null);
-    }
+  // Xử lý khi video được tạo thành công từ component upload
+  const handleVideoCreated = async (video: any) => {
+    // Reset form upload và ẩn form
+    setShowUploadForm({});
+    // Refresh danh sách khóa học để hiển thị video mới
+    await fetchCourses();
+  };
+
+  // Toggle hiển thị form upload
+  const toggleUploadForm = (courseId: string) => {
+    setShowUploadForm(current => ({
+      ...current,
+      [courseId]: !current[courseId]
+    }));
   };
 
   return (
@@ -330,7 +317,9 @@ export function AdminCourseManager() {
         <CardContent>
           <form onSubmit={handleCreateCourse} className="grid gap-4 md:grid-cols-3">
             <label className="space-y-2 md:col-span-1">
-              <span className="text-xs font-semibold uppercase tracking-wide text-primary">Tiêu đề</span>
+              <span className="text-xs font-semibold uppercase tracking-wide text-primary">
+                Tiêu đề <RequiredIndicator />
+              </span>
               <Input
                 value={courseForm.title}
                 onChange={event => setCourseForm(current => ({...current, title: event.target.value}))}
@@ -353,7 +342,9 @@ export function AdminCourseManager() {
               </select>
             </label>
             <label className="space-y-2 md:col-span-3">
-              <span className="text-xs font-semibold uppercase tracking-wide text-primary">Mô tả</span>
+              <span className="text-xs font-semibold uppercase tracking-wide text-primary">
+                Mô tả <RequiredIndicator />
+              </span>
               <Textarea
                 value={courseForm.description}
                 onChange={event => setCourseForm(current => ({...current, description: event.target.value}))}
@@ -368,6 +359,11 @@ export function AdminCourseManager() {
               </Button>
             </div>
           </form>
+          
+          {/* Legend for required fields */}
+          <div className="mt-4 text-xs text-muted-foreground">
+            <RequiredIndicator /> Trường bắt buộc
+          </div>
         </CardContent>
       </Card>
       {loading ? (
@@ -392,7 +388,9 @@ export function AdminCourseManager() {
                   {draft ? (
                     <div className="grid gap-4 md:grid-cols-3">
                       <label className="space-y-2 md:col-span-1">
-                        <span className="text-xs font-semibold uppercase tracking-wide text-primary">Tiêu đề</span>
+                        <span className="text-xs font-semibold uppercase tracking-wide text-primary">
+                          Tiêu đề <RequiredIndicator />
+                        </span>
                         <Input
                           value={draft.title}
                           onChange={event =>
@@ -423,7 +421,9 @@ export function AdminCourseManager() {
                         </select>
                       </label>
                       <label className="space-y-2 md:col-span-3">
-                        <span className="text-xs font-semibold uppercase tracking-wide text-primary">Mô tả</span>
+                        <span className="text-xs font-semibold uppercase tracking-wide text-primary">
+                          Mô tả <RequiredIndicator />
+                        </span>
                         <Textarea
                           value={draft.description}
                           onChange={event =>
@@ -460,7 +460,9 @@ export function AdminCourseManager() {
                                 {videoDraft ? (
                                   <>
                                     <label className="space-y-2 md:col-span-2">
-                                      <span className="text-xs font-semibold uppercase tracking-wide text-primary">Tiêu đề</span>
+                                      <span className="text-xs font-semibold uppercase tracking-wide text-primary">
+                                        Tiêu đề <RequiredIndicator />
+                                      </span>
                                       <Input
                                         value={videoDraft.title}
                                         onChange={event => handleVideoChange(video.id, "title", event.target.value)}
@@ -470,7 +472,8 @@ export function AdminCourseManager() {
                                       <span className="text-xs font-semibold uppercase tracking-wide text-primary">Đường dẫn</span>
                                       <Input
                                         value={videoDraft.url}
-                                        onChange={event => handleVideoChange(video.id, "url", event.target.value)}
+                                        readOnly
+                                        className="bg-gray-100"
                                       />
                                     </label>
                                     <label className="space-y-2 md:col-span-4">
@@ -509,11 +512,11 @@ export function AdminCourseManager() {
                                       </select>
                                     </div>
                                     <div className="flex items-end gap-3 md:col-span-4">
-                                      <Button onClick={() => handleSaveVideo(video.id)} disabled={savingId === video.id}>
-                                        {savingId === video.id ? "Đang lưu..." : "Lưu video"}
+                                      <Button onClick={() => handleSaveVideo(video.id)} disabled={savingId === videoId}>
+                                        {savingId === videoId ? "Đang lưu..." : "Lưu video"}
                                       </Button>
-                                      <Button variant="ghost" onClick={() => handleDeleteVideo(video.id)} disabled={savingId === video.id}>
-                                        {savingId === video.id ? "Đang xoá..." : "Xoá video"}
+                                      <Button variant="ghost" onClick={() => handleDeleteVideo(video.id)} disabled={savingId === videoId}>
+                                        {savingId === videoId ? "Đang xoá..." : "Xoá video"}
                                       </Button>
                                     </div>
                                   </>
@@ -527,45 +530,61 @@ export function AdminCourseManager() {
                   </div>
 
                   <div className="space-y-3">
-                    <h4 className="text-sm font-semibold text-primary">Thêm video mới</h4>
-                    <div className="grid gap-3 md:grid-cols-4">
-                      <Input
-                        placeholder="Tiêu đề"
-                        value={newVideoForms[course.id]?.title ?? ""}
-                        onChange={event => handleNewVideoChange(course.id, "title", event.target.value)}
-                        className="md:col-span-2"
-                      />
-                      <Input
-                        placeholder="Đường dẫn"
-                        value={newVideoForms[course.id]?.url ?? ""}
-                        onChange={event => handleNewVideoChange(course.id, "url", event.target.value)}
-                        className="md:col-span-2"
-                      />
-                      <Textarea
-                        placeholder="Mô tả"
-                        value={newVideoForms[course.id]?.description ?? ""}
-                        onChange={event => handleNewVideoChange(course.id, "description", event.target.value)}
-                        className="md:col-span-4"
-                        rows={2}
-                      />
-                      <Input
-                        type="number"
-                        placeholder="Thời lượng (phút)"
-                        value={newVideoForms[course.id]?.duration ?? ""}
-                        onChange={event => handleNewVideoChange(course.id, "duration", event.target.value)}
-                      />
-                      <Input
-                        type="number"
-                        placeholder="Thứ tự"
-                        value={newVideoForms[course.id]?.sortOrder ?? ""}
-                        onChange={event => handleNewVideoChange(course.id, "sortOrder", event.target.value)}
-                      />
-                      <div className="md:col-span-4">
-                        <Button onClick={() => handleCreateVideo(course.id)} disabled={savingId === `create-${course.id}`}>
-                          {savingId === `create-${course.id}` ? "Đang thêm..." : "Thêm video"}
-                        </Button>
-                      </div>
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-semibold text-primary">Thêm video mới</h4>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => toggleUploadForm(course.id)}
+                      >
+                        {showUploadForm[course.id] ? "Huỷ" : "Tải video lên"}
+                      </Button>
                     </div>
+                    
+                    {showUploadForm[course.id] ? (
+                      <AdminVideoUpload 
+                        courseId={course.id}
+                        onVideoCreated={handleVideoCreated}
+                        onCancel={() => toggleUploadForm(course.id)}
+                      />
+                    ) : (
+                      <div className="grid gap-3 md:grid-cols-4">
+                        <Input
+                          placeholder="Tiêu đề"
+                          value={newVideoForms[course.id]?.title ?? ""}
+                          onChange={event => handleNewVideoChange(course.id, "title", event.target.value)}
+                          className="md:col-span-2"
+                        />
+                        <Textarea
+                          placeholder="Mô tả"
+                          value={newVideoForms[course.id]?.description ?? ""}
+                          onChange={event => handleNewVideoChange(course.id, "description", event.target.value)}
+                          className="md:col-span-4"
+                          rows={2}
+                        />
+                        <Input
+                          type="number"
+                          placeholder="Thời lượng (phút)"
+                          value={newVideoForms[course.id]?.duration ?? ""}
+                          onChange={event => handleNewVideoChange(course.id, "duration", event.target.value)}
+                        />
+                        <Input
+                          type="number"
+                          placeholder="Thứ tự"
+                          value={newVideoForms[course.id]?.sortOrder ?? ""}
+                          onChange={event => handleNewVideoChange(course.id, "sortOrder", event.target.value)}
+                        />
+                        <div className="md:col-span-4">
+                          <Button 
+                            variant="outline" 
+                            disabled
+                            className="opacity-50 cursor-not-allowed"
+                          >
+                            Thêm video (chức năng này đã được thay thế bằng upload file)
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-2">

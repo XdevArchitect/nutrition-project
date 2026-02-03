@@ -91,6 +91,7 @@ Dự án Dinh Dưỡng Tối Ưu là một nền tảng giáo dục trực tuy�
 
 ### Chống download video
 - Video được embed từ YouTube để tránh download trực tiếp
+- **MỚI**: Hỗ trợ upload video trực tiếp lên server để phát trực tiếp
 - Hệ thống theo dõi view count để ngăn chặn abuse
 
 ## 📊 Mô hình dữ liệu

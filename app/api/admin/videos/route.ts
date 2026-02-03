@@ -1,6 +1,6 @@
-import {NextResponse} from "next/server";
-import {prisma} from "@/lib/prisma";
-import {assertAdmin} from "@/lib/admin-auth";
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { assertAdmin } from "@/lib/admin-auth";
 
 export async function GET() {
   const unauthorized = await assertAdmin();
@@ -8,14 +8,14 @@ export async function GET() {
 
   try {
     const videos = await prisma.video.findMany({
-      orderBy: [{courseId: "asc"}, {sortOrder: "asc"}],
-      include: {course: {select: {id: true, title: true}}}
+      orderBy: [{ courseId: "asc" }, { sortOrder: "asc" }],
+      include: { course: { select: { id: true, title: true } } }
     });
 
-    return NextResponse.json({videos});
+    return NextResponse.json({ videos });
   } catch (error) {
     console.error("Error fetching videos:", error);
-    return NextResponse.json({error: "Không thể tải danh sách video"}, {status: 500});
+    return NextResponse.json({ error: "Không thể tải danh sách video" }, { status: 500 });
   }
 }
 
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     }>;
 
     if (!payload.courseId || !payload.title || !payload.url) {
-      return NextResponse.json({error: "Thiếu thông tin bắt buộc"}, {status: 400});
+      return NextResponse.json({ error: "Thiếu thông tin bắt buộc" }, { status: 400 });
     }
 
     const video = await prisma.video.create({
@@ -48,12 +48,12 @@ export async function POST(request: Request) {
         sortOrder: typeof payload.sortOrder === "number" ? payload.sortOrder : undefined,
         isPublished: typeof payload.isPublished === "boolean" ? payload.isPublished : undefined
       },
-      include: {course: {select: {id: true, title: true}}}
+      include: { course: { select: { id: true, title: true } } }
     });
 
-    return NextResponse.json({video}, {status: 201});
+    return NextResponse.json({ video }, { status: 201 });
   } catch (error) {
     console.error("Create video error", error);
-    return NextResponse.json({error: "Không thể tạo video"}, {status: 500});
+    return NextResponse.json({ error: "Không thể tạo video" }, { status: 500 });
   }
 }

@@ -108,6 +108,29 @@ export function VideoPlayer({
     }
   };
 
+  // Check if URL is a local uploaded file
+  const isLocalVideo = (url: string) => {
+    return url.startsWith("/uploads/videos/") || url.includes("/uploads/videos/");
+  };
+
+  // Get video source based on URL type
+  const getVideoSource = (url: string) => {
+    if (isLocalVideo(url)) {
+      // It's a local uploaded video
+      return url;
+    } else {
+      // It's a YouTube URL, extract embed URL
+      const getYoutubeId = (url: string) => {
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[2].length === 11) ? match[2] : null;
+      };
+
+      const youtubeId = getYoutubeId(url);
+      return youtubeId ? `https://www.youtube.com/embed/${youtubeId}` : url;
+    }
+  };
+
   if (isLoading) {
     return (
       <Card className="border-primary/15 bg-white/80">
@@ -163,15 +186,7 @@ export function VideoPlayer({
     );
   }
 
-  // Extract YouTube video ID from URL
-  const getYoutubeId = (url: string) => {
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-    const match = url.match(regExp);
-    return (match && match[2].length === 11) ? match[2] : null;
-  };
-
-  const youtubeId = getYoutubeId(url);
-  const embedUrl = youtubeId ? `https://www.youtube.com/embed/${youtubeId}` : url;
+  const videoSrc = getVideoSource(url);
 
   return (
     <Card className="border-primary/15 bg-white/80">
@@ -196,15 +211,30 @@ export function VideoPlayer({
       </CardHeader>
       <CardContent>
         {viewCount < maxViews ? (
-          <div className="aspect-video w-full">
-            <iframe
-              src={embedUrl}
-              title={title}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              className="h-full w-full rounded-lg"
-            />
-          </div>
+          isLocalVideo(url) ? (
+            // Render HTML5 video player for local videos
+            <div className="aspect-video w-full">
+              <video 
+                controls 
+                className="h-full w-full rounded-lg"
+                poster="/images/video-poster.png"
+              >
+                <source src={videoSrc} type="video/mp4" />
+                Trình duyệt của bạn không hỗ trợ thẻ video.
+              </video>
+            </div>
+          ) : (
+            // Render iframe for YouTube videos
+            <div className="aspect-video w-full">
+              <iframe
+                src={videoSrc}
+                title={title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="h-full w-full rounded-lg"
+              />
+            </div>
+          )
         ) : (
           <div className="flex aspect-video items-center justify-center rounded-lg bg-primary/10">
             <div className="text-center">
